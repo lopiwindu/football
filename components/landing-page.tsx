@@ -12,7 +12,7 @@ import {
   Lock,
 } from "lucide-react";
 
-export function LandingPage(): JSX.Element {
+export function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950">
       {/* Hero Section */}
@@ -77,11 +77,11 @@ export function LandingPage(): JSX.Element {
                 Get Started Now
               </Link>
               <Link
-                href="/dashboard"
+                href="/"
                 className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-slate-600 text-white hover:bg-slate-800 text-lg px-8 h-14"
               >
                 <BarChart3 className="w-5 h-5 mr-2" />
-                View Markets
+                Read Docs
               </Link>
             </div>
 

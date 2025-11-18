@@ -12,11 +12,7 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-export function WalletProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}): JSX.Element {
+export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);

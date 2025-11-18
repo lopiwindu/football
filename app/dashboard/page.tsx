@@ -1,7 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { WalletProvider, useWallet } from "@/hooks/use-wallet";
+import { MarketCard } from "@/components/market-card";
+import { ProfileSettings } from "@/components/profile";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   Trophy,
   TrendingUp,
@@ -11,7 +23,8 @@ import {
 } from "lucide-react";
 import type { Match, UserPrediction } from "@/types";
 
-function DashboardApp(): JSX.Element {
+function DashboardApp() {
+  const router = useRouter();
   const {
     isConnected,
     isConnecting,
@@ -23,6 +36,7 @@ function DashboardApp(): JSX.Element {
   const [matches, setMatches] = useState<Match[]>([]);
   const [userPredictions, setUserPredictions] = useState<UserPrediction[]>([]);
   const [userBalance, setUserBalance] = useState<number>(1000);
+  const [isWalletDialogOpen, setIsWalletDialogOpen] = useState<boolean>(false);
 
   useEffect(() => {
     // Initialize with upcoming football matches
@@ -143,32 +157,6 @@ function DashboardApp(): JSX.Element {
     );
   };
 
-  // Redirect to home if not connected
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
-        <div className="text-center space-y-6 max-w-md">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto">
-            <Trophy className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-white">
-            Welcome to Football Markets
-          </h1>
-          <p className="text-slate-300">
-            Connect your wallet to access the dashboard
-          </p>
-          <button
-            onClick={connectWallet}
-            disabled={isConnecting}
-            className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg px-8 h-12"
-          >
-            {isConnecting ? "Connecting..." : "Connect Wallet"}
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Header */}
@@ -189,18 +177,61 @@ function DashboardApp(): JSX.Element {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="bg-slate-700/50 text-slate-300 border border-slate-600 px-4 py-2 rounded-md text-sm">
-                {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
-              </div>
+              {isConnected ? (
+                <Dialog
+                  open={isWalletDialogOpen}
+                  onOpenChange={setIsWalletDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <button className="bg-slate-700/50 text-slate-300 border border-slate-600 px-4 py-2 rounded-md text-sm hover:bg-slate-700/70 transition-colors cursor-pointer">
+                      {walletAddress?.slice(0, 6)}...{walletAddress?.slice(-4)}
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-slate-800 border-slate-700">
+                    <DialogHeader>
+                      <DialogTitle className="text-white">
+                        Wallet Details
+                      </DialogTitle>
+                      <DialogDescription className="text-slate-400">
+                        Manage your wallet connection
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="p-4 bg-slate-700/50 border border-slate-600 rounded-lg">
+                        <p className="text-sm text-slate-400 mb-2">
+                          Wallet Address
+                        </p>
+                        <p className="text-white font-mono break-all">
+                          {walletAddress}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          disconnectWallet();
+                          setIsWalletDialogOpen(false);
+                          router.push("/");
+                        }}
+                        variant="destructive"
+                        className="w-full"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Disconnect Wallet
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              ) : (
+                <Button
+                  onClick={connectWallet}
+                  disabled={isConnecting}
+                  className="bg-blue-600 hover:bg-blue-700 text-sm"
+                >
+                  {isConnecting ? "Connecting..." : "Connect Wallet"}
+                </Button>
+              )}
               <div className="bg-green-500/10 text-green-400 border border-green-500/20 px-4 py-2 rounded-md text-sm">
                 Balance: ${userBalance.toLocaleString()}
               </div>
-              <button
-                onClick={disconnectWallet}
-                className="text-slate-400 hover:text-white hover:bg-slate-800 p-2 rounded-md"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
             </div>
           </div>
         </div>
@@ -256,32 +287,23 @@ function DashboardApp(): JSX.Element {
                 Select a match and place your prediction
               </p>
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {matches.map((match: Match) => (
-                  <div
-                    key={match.id}
-                    className="bg-slate-700/50 border border-slate-600 rounded-lg p-4"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center">
-                        <span className="text-blue-400 text-xs border border-blue-500/20 bg-blue-500/10 px-2 py-1 rounded">
-                          {match.league}
-                        </span>
-                        <span className="text-green-400 text-xs border border-green-500/20 bg-green-500/10 px-2 py-1 rounded">
-                          Live
-                        </span>
-                      </div>
-                      <h3 className="text-white font-semibold">
-                        {match.homeTeam} vs {match.awayTeam}
-                      </h3>
-                      <p className="text-slate-400 text-sm">
-                        {new Date(match.date).toLocaleDateString()}
-                      </p>
-                      <div className="text-slate-400 text-sm">
-                        Pool: ${match.totalPool.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                {matches.map((match: Match) => {
+                  // Calculate total bet for this match
+                  const totalBetOnMatch = userPredictions
+                    .filter((p) => p.matchId === match.id)
+                    .reduce((sum, p) => sum + p.amount, 0);
+
+                  return (
+                    <MarketCard
+                      key={match.id}
+                      match={match}
+                      onPlaceBet={handlePlaceBet}
+                      userBalance={userBalance}
+                      isWalletConnected={isConnected}
+                      userTotalBetOnMatch={totalBetOnMatch}
+                    />
+                  );
+                })}
               </div>
             </div>
           )}
@@ -390,14 +412,15 @@ function DashboardApp(): JSX.Element {
           )}
 
           {activeTab === "profile" && (
-            <div className="bg-slate-800 border border-slate-700 rounded-lg p-6">
-              <h2 className="text-white text-xl font-bold mb-4">
-                Profile Settings
-              </h2>
-              <p className="text-slate-400">
-                Profile management coming soon...
-              </p>
-            </div>
+            <ProfileSettings
+              balance={userBalance}
+              onBalanceUpdate={setUserBalance}
+              predictions={userPredictions}
+              onDisconnectWallet={() => {
+                disconnectWallet();
+                router.push("/");
+              }}
+            />
           )}
         </div>
       </main>
@@ -417,7 +440,7 @@ function DashboardApp(): JSX.Element {
   );
 }
 
-export default function DashboardPage(): JSX.Element {
+export default function DashboardPage() {
   return (
     <WalletProvider>
       <DashboardApp />
